@@ -4,24 +4,37 @@ import * as z from "zod";
 export const createEvent = tool(
   () => {
     console.log("Creating event...");
-    return;
+    return "Meeting has been created";
   },
   {
     name: "create_event",
     description: "Create a new calendar event.",
-    schema: z.object({}),
+    schema: z.object({
+      query: z
+        .string()
+        .describe("A query to create a event in google calendar."),
+    }),
   },
 );
 
 export const getEvents = tool(
   () => {
     console.log("Getting events...");
-    return;
+    return JSON.stringify([
+      {
+        name: "Meeting with Yash",
+        date: "19-06-2026",
+        time: "06:00PM",
+        venue: "Google Meet",
+      },
+    ]);
   },
   {
     name: "get_events",
     description: "Get the calendar events.",
-    schema: z.object({}),
+    schema: z.object({
+      query: z.string().describe("A query to get the events from calendar"),
+    }),
   },
 );
 
