@@ -58,11 +58,9 @@ const graph = new StateGraph(MessagesAnnotation)
 
 async function main() {
   const result = await graph.invoke({
-    messages: [
-      new HumanMessage("Hi, can you create meet with yash tomorrow at 4pm?"),
-    ],
+    messages: [new HumanMessage("Hi, when is my birthday?")],
   });
-  console.log("Assistant: ", result.messages.at(-1));
+  console.log("Assistant: ", result.messages.at(-1)?.content);
 }
 
 main();
