@@ -9,6 +9,7 @@ import {
 } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import readline from "node:readline/promises";
 
 const tools = [createEvent, getEvents, deleteEvent];
 const toolNode = new ToolNode(tools);
@@ -57,14 +58,23 @@ const graph = new StateGraph(MessagesAnnotation)
   .compile();
 
 async function main() {
-  const result = await graph.invoke({
-    messages: [
-      new HumanMessage(
-        "Hi, can you create a meet with yash (yash1@gmail.com) for 6pm today?",
-      ),
-    ],
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
   });
-  console.log("Assistant: ", result.messages.at(-1)?.content);
+
+  while (true) {
+    const query = await rl.question("You: ");
+    if (query === "/bye") {
+      break;
+    }
+
+    const result = await graph.invoke({
+      messages: [new HumanMessage(query)],
+    });
+    console.log("Assistant: ", result.messages.at(-1)?.content);
+  }
+  rl.close();
 }
 
 main();
