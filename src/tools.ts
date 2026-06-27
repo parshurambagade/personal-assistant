@@ -3,25 +3,69 @@ import { google } from "googleapis";
 import * as z from "zod";
 import tokens from "../tokens.json";
 
+const eventSchema = z.object({
+  summary: z.string().describe("Title of the event"),
+  start: z.object({
+    dateTime: z.string().describe("A start date time for an event in UTC"),
+    timeZone: z
+      .string()
+      .describe("A timezone in which event needs to be start."),
+  }),
+  end: z.object({
+    dateTime: z.string().describe("An end date time for an event in UTC"),
+    timeZone: z.string().describe("A timezone in which event needs to be end."),
+  }),
+  attendees: z.array(
+    z.object({
+      email: z.string().describe("The email of the attendee"),
+      displayName: z.string().describe("The name of the attendee"),
+    }),
+  ),
+});
+
+type EventData = z.infer<typeof eventSchema>;
+
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URL,
 );
 oauth2Client.setCredentials(tokens);
+
+// Create a new Calendar API client.
+const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
 export const createEvent = tool(
-  () => {
+  async (eventData) => {
     console.log("Creating event...");
+    console.log("Event Data: ", eventData);
+
+    const { start, end, attendees, summary } = eventData as EventData;
+    const response = await calendar.events.insert({
+      calendarId: "primary",
+      sendUpdates: "all",
+      conferenceDataVersion: 1,
+      requestBody: {
+        start: start,
+        end: end,
+        attendees: attendees,
+        conferenceData: {
+          createRequest: {
+            conferenceSolutionKey: "hangoutsMeet",
+            requestId: crypto.randomUUID(),
+          },
+        },
+        summary: summary,
+      },
+    });
+    console.log("Response: ", response);
+
     return "Meeting has been created";
   },
   {
     name: "create_event",
     description: "Create a new calendar event.",
-    schema: z.object({
-      query: z
-        .string()
-        .describe("A query to create a event in google calendar."),
-    }),
+    schema: eventSchema,
   },
 );
 
@@ -33,8 +77,6 @@ export const getEvents = tool(
     console.log("TimeMin: ", timeMin);
     console.log("TimeMax: ", timeMax);
     console.log("Q: ", q);
-    // Create a new Calendar API client.
-    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
     try {
       // Get the list of events.
