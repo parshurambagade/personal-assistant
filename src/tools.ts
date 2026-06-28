@@ -6,14 +6,16 @@ import tokens from "../tokens.json";
 const eventSchema = z.object({
   summary: z.string().describe("Title of the event"),
   start: z.object({
-    dateTime: z.string().describe("A start date time for an event in UTC"),
+    dateTime: z.string().describe("A start date time string for an event"),
     timeZone: z
       .string()
-      .describe("A timezone in which event needs to be start."),
+      .describe("A IANA timezone string in which event needs to be start."),
   }),
   end: z.object({
-    dateTime: z.string().describe("An end date time for an event in UTC"),
-    timeZone: z.string().describe("A timezone in which event needs to be end."),
+    dateTime: z.string().describe("An end date time string for an event"),
+    timeZone: z
+      .string()
+      .describe("A IANA timezone string in which event needs to be end."),
   }),
   attendees: z.array(
     z.object({
@@ -90,7 +92,7 @@ export const getEvents = tool(
 
       if (!events || events.length === 0) {
         console.log("No upcoming events found.");
-        return [];
+        return "No upcoming events found.";
       }
 
       const results = events.map((event) => {
@@ -123,12 +125,12 @@ export const getEvents = tool(
       timeMin: z
         .string()
         .describe(
-          "A minimum time (From time) in UTC to fetch events in the timeline",
+          "A minimum time (From time) in string to fetch events in the timeline",
         ),
       timeMax: z
         .string()
         .describe(
-          "A maximum time (To time) in UTC to fetch events in the timeline",
+          "A maximum time (To time) in string to fetch events in the timeline",
         ),
     }),
   },
@@ -137,7 +139,7 @@ export const getEvents = tool(
 export const deleteEvent = tool(
   () => {
     console.log("Deleting event...");
-    return;
+    return "Event deleted.";
   },
   {
     name: "delete_event",

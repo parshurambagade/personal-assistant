@@ -8,7 +8,11 @@ import {
   type ConditionalEdgeRouter,
 } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import readline from "node:readline/promises";
 import { MemorySaver } from "@langchain/langgraph";
 
@@ -66,6 +70,20 @@ async function main() {
     output: process.stdout,
   });
 
+  const currentDateTime = new Date().toLocaleString();
+  const currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const SYSTEM_PROMPT = `
+  You are a helpful personal assistant, your name is Kunal and your task is to help user and answer user queries.
+  You have access to following tools: 
+  1. createEvent - use this to create new event
+  2. getEvents - use this to get the events
+  3. deleteEvent - use this to delete a event
+
+  If you dont know the answer, say I dont know the answer. 
+
+  Current DateTime: ${currentDateTime},
+  Current TimeZone: ${currentTimeZone}
+  `;
   while (true) {
     const query = await rl.question("You: ");
     if (query === "/bye") {
@@ -74,7 +92,7 @@ async function main() {
 
     const result = await graph.invoke(
       {
-        messages: [new HumanMessage(query)],
+        messages: [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(query)],
       },
       { configurable: { thread_id: "1" } },
     );
