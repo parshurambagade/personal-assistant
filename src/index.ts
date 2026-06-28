@@ -10,6 +10,7 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import readline from "node:readline/promises";
+import { MemorySaver } from "@langchain/langgraph";
 
 const tools = [createEvent, getEvents, deleteEvent];
 const toolNode = new ToolNode(tools);
@@ -46,6 +47,8 @@ const shouldContinue = (state: typeof MessagesAnnotation.State) => {
   return END;
 };
 
+const checkpointer = new MemorySaver();
+
 /**
  * DEFINE THE STATE GRAPH
  */
@@ -55,7 +58,7 @@ const graph = new StateGraph(MessagesAnnotation)
   .addEdge(START, "llmCall")
   .addEdge("toolNode", "llmCall")
   .addConditionalEdges("llmCall", shouldContinue, ["toolNode", END])
-  .compile();
+  .compile({ checkpointer });
 
 async function main() {
   const rl = readline.createInterface({
@@ -69,9 +72,12 @@ async function main() {
       break;
     }
 
-    const result = await graph.invoke({
-      messages: [new HumanMessage(query)],
-    });
+    const result = await graph.invoke(
+      {
+        messages: [new HumanMessage(query)],
+      },
+      { configurable: { thread_id: "1" } },
+    );
     console.log("Assistant: ", result.messages.at(-1)?.content);
   }
   rl.close();
