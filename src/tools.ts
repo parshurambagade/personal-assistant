@@ -42,8 +42,6 @@ const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
 export const createEvent = tool(
   async (eventData) => {
-    console.log("Creating event...");
-    console.log("Event Data: ", eventData);
 
     const { start, end, attendees, summary } = eventData as EventData;
     const response = await calendar.events.insert({
@@ -63,7 +61,6 @@ export const createEvent = tool(
         summary: summary,
       },
     });
-    console.log("Response: ", response);
 
     return "Meeting has been created";
   },
@@ -76,12 +73,8 @@ export const createEvent = tool(
 
 export const getEvents = tool(
   async (params) => {
-    console.log("Calling calendar events tool");
 
     const { timeMin, timeMax, q } = params;
-    console.log("TimeMin: ", timeMin);
-    console.log("TimeMax: ", timeMax);
-    console.log("Q: ", q);
 
     try {
       // Get the list of events.
@@ -94,7 +87,6 @@ export const getEvents = tool(
       const events = result.data.items;
 
       if (!events || events.length === 0) {
-        console.log("No upcoming events found.");
         return "No upcoming events found.";
       }
 
@@ -112,7 +104,6 @@ export const getEvents = tool(
           attendees: event?.attendees,
         };
       });
-      console.log("Events: ", results);
       return JSON.stringify(results);
     } catch (error) {
       console.error(error);
@@ -141,7 +132,6 @@ export const getEvents = tool(
 
 export const deleteEvent = tool(
   () => {
-    console.log("Deleting event...");
     return "Event deleted.";
   },
   {

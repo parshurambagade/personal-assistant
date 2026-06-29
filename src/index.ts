@@ -1,4 +1,4 @@
-import { ChatGroq } from "@langchain/groq";
+import "./instrumentation"; // Must be the first import
 import { createEvent, deleteEvent, getEvents } from "./tools";
 import {
   END,
@@ -15,6 +15,11 @@ import {
 } from "@langchain/core/messages";
 import readline from "node:readline/promises";
 import { MemorySaver } from "@langchain/langgraph";
+import { CallbackHandler } from "@langfuse/langchain";
+import { ChatGroq } from "@langchain/groq";
+
+// Initialize the Langfuse CallbackHandler
+const langfuseHandler = new CallbackHandler();
 
 const tools = [createEvent, getEvents, deleteEvent];
 const toolNode = new ToolNode(tools);
@@ -94,7 +99,7 @@ async function main() {
       {
         messages: [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(query)],
       },
-      { configurable: { thread_id: "1" } },
+      { configurable: { thread_id: "1" }, callbacks: [langfuseHandler] },
     );
     console.log("Assistant: ", result.messages.at(-1)?.content);
   }
